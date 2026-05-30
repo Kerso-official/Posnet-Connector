@@ -1,0 +1,17 @@
+[project]
+name = "posnet-connector"
+version = "0.1.0"
+description = "Posnet connector is a python lib that can be used to communicate with POSNET printers that support 'posnet' connection protocol"
+readme = "README.md"
+authors = [
+    { name = "Kerso-official", email = "kerso8877@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "crc>=7.1.0",
+    "pyserial>=3.5",
+]
+
+[build-system]
+requires = ["uv_build>=0.11.17,<0.12.0"]
+build-backend = "uv_build"
