@@ -9,6 +9,13 @@ class PosnetPrinter(PosnetCommunicator):
 
     # Custom command support
     def custom(self, command: str, params: Optional[dict] = None) -> Optional[str]:
+        """
+        Sends custom command to the printer.
+
+        Args:
+            command: command that will be sent to the printer
+            params: (optional) parameters for the command
+        """
         return self.send_command(command, params)
 
     # Controlling sequences
