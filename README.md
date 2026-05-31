@@ -3,7 +3,12 @@
 
 A python lib that allows to easily communicate with POSNET printers
 
+> [!NOTE]
 > Note that this project is in development, most of the functions aren't implemented yet and because of that the package isn't available on PyPi yet
+
+> [!CAUTION]
+> This package don't support online posnet printer actions (e.g. e-paragon).
+> If you have access to newer protocol documentation you can use function `PosnetPrinter.custom(command, params)` to communicate with the printer.
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
