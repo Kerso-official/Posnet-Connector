@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional
 
 from ._communication import PosnetCommunicator
+from ._enums import BacklightMode, DisplayTarget, FooterEnding
 
 
 class PosnetPrinter(PosnetCommunicator):
@@ -223,3 +224,115 @@ class PosnetPrinter(PosnetCommunicator):
                    if false - paper save turned off
         """
         return self.send_command("papersavecfg", {"ps": state})
+
+    def set_footer_config(
+        self,
+        cashier: Optional[str] = None,  # cc, max 32 chars
+        terminal: Optional[str] = None,  # cn, max 8 chars
+        persistent: Optional[bool] = None,  # ca, True = everytime, False = only next
+        system_number: Optional[str] = None,  # sn, max 30 chars
+        barcode: Optional[str] = None,  # bc, max 30 chars
+        info_lines: Optional[list[str]] = None,  # ln, as same as in set_footer
+        info_persistent: Optional[bool] = None,  # lb, True = every receipts
+        ending: Optional[FooterEnding] = None,  # fe
+    ) -> Optional[str]:
+        """
+        Configures the print footer.
+
+        Args:
+            cashier: Cashier name, max 32 chars (prints first 17).
+            terminal: Terminal number, max 8 chars.
+            persistent: False - next receipt only, True - always.
+            system_number: System number, max 30 chars.
+            barcode: Barcode, max 30 chars.
+            info_lines: Informational lines, same rules as set_footer.
+            info_persistent: False - next receipt only, True - all receipts.
+            ending: How to end the footer, see FooterEnding enum.
+        """
+        params = {}
+
+        if cashier is not None:
+            params["cc"] = cashier[:32]
+        if terminal is not None:
+            params["cn"] = terminal[:8]
+        if persistent is not None:
+            params["ca"] = "1" if persistent else "0"
+        if system_number is not None:
+            params["sn"] = system_number[:30]
+        if barcode is not None:
+            params["bc"] = barcode[:30]
+        if info_lines is not None:
+            params["ln"] = "\n".join(info_lines)
+        if info_persistent is not None:
+            params["lb"] = "1" if info_persistent else "0"
+        if ending is not None:
+            params["fe"] = int(ending)
+
+        return self.send_command("ftrcfg", params)
+
+    def set_display_config(
+        self,
+        display: DisplayTarget,  # id, required
+        contrast: Optional[int] = None,  # co, scope 1-16
+        brightness: Optional[int] = None,  # lu, scope 1-16
+        backlight_mode: Optional[BacklightMode] = None,  # ls
+        backlight_timeout: Optional[int] = None,  # od, scope 0-999 seconds
+    ) -> Optional[str]:
+        """
+        Configures display parameters.
+
+        Args:
+            display: Which display to configure (operator or customer).
+            contrast: Display contrast, range 1-16.
+            brightness: Backlight brightness, range 1-16.
+            backlight_mode: Backlight working mode, see BacklightMode enum.
+            backlight_timeout: Operator display backlight timeout in seconds, range 0-999.
+        """
+        params = {"id": int(display)}
+
+        if contrast is not None:
+            params["co"] = max(1, min(16, contrast))
+        if brightness is not None:
+            params["lu"] = max(1, min(16, brightness))
+        if backlight_mode is not None:
+            params["ls"] = int(backlight_mode)
+        if backlight_timeout is not None:
+            params["od"] = max(0, min(999, backlight_timeout))
+
+        return self.send_command("dspcfg", params)
+
+    def set_display_transaction_config(
+        self,
+        ln: Optional[bool] = None,
+        dn: Optional[bool] = None,
+        pn: Optional[bool] = None,
+        yn: Optional[bool] = None,
+        cn: Optional[bool] = None,
+        ls: Optional[bool] = None,
+    ) -> Optional[str]:
+        """
+        Configures display mode during transactions.
+        Changes take effect at the start of the next transaction.
+
+        Args:
+            ln: Display name and value of the product?
+            dn: Display name and value of the discount?
+            pn: Display name and value of the returnable packaging?
+            yn: Display name and value of the payment method?
+            cn: Display "Reszta", "Do zaplaty"?
+            ls: Display position value (False) or subtotal (True)?
+        """
+        params = {}
+
+        for key, value in [
+            ("ln", ln),
+            ("dn", dn),
+            ("pn", pn),
+            ("yn", yn),
+            ("cn", cn),
+            ("ls", ls),
+        ]:
+            if value is not None:
+                params[key] = "1" if value else "0"
+
+        return self.send_command("dspmode", params)
